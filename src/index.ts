@@ -87,7 +87,7 @@ const startInterval = (state: State) => {
       return;
     }
     state.time -= INTERVAL_LENGTH;
-    // render(state);
+    render(state);
   }, INTERVAL_LENGTH);
 };
 
@@ -108,7 +108,7 @@ const state: State = {
 };
 
 startInterval(state);
-// render(state);
+render(state);
 
 initEvents({
   pausePlay() {
