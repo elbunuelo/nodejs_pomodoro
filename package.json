@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "test": "vitest",
+    "watch": "nodemon --no-stdin -w ./src -e ts -x 'npm run build && npm start'"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "nodemon": "^3.1.9",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8"
+  }
+}
