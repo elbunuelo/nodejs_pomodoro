@@ -1,32 +1,34 @@
 import readline from "readline";
+import type { ReadStream } from "tty";
 
-interface Api {
-  pausePlay: () => void;
-  skip: () => void;
-  restart: () => void;
+export interface Api {
   break: () => void;
+  complete: () => void;
+  exit: () => void;
   longBreak: () => void;
+  pausePlay: () => void;
   pomodoro: () => void;
+  restart: () => void;
+  skip: () => void;
 }
 
-export const initEvents = (api: Api) => {
+export const initEvents = (api: Api, stream: ReadStream) => {
   // Configure readline
-  readline.emitKeypressEvents(process.stdin);
-  if (process.stdin.isTTY) {
-    process.stdin.setRawMode(true);
+  readline.emitKeypressEvents(stream);
+  if (stream.isTTY) {
+    stream.setRawMode(true);
   }
 
   // Create interface
   readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
+    input: stream,
+    // output: process.stdout,
   });
 
   // Listen for keypress events
-  process.stdin.on("keypress", (str, key) => {
+  stream.on("keypress", (str, key) => {
     if (key && key.ctrl && key.name === "c") {
-      console.log("Exiting...");
-      process.exit();
+      api.exit();
     }
 
     switch (key.name) {
@@ -47,6 +49,9 @@ export const initEvents = (api: Api) => {
         break;
       case "p":
         api.pomodoro();
+        break;
+      case "c":
+        api.complete();
         break;
     }
   });
