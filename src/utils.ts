@@ -21,3 +21,33 @@ export const getCurrentIntervalLength = (mode: string) => {
       return DEFAULT_POMODORO_LENGTH;
   }
 };
+
+export const withLeadingZero = (num: number) => {
+  num = Math.max(num, 0);
+  const leadingZero = num < 10 ? "0" : "";
+  return `${leadingZero}${num}`;
+};
+
+const getMinutesInMilliseconds = (time: number) => {
+  time = Math.max(time, 0);
+  return Math.floor(time / 60);
+};
+
+export const getDisplayMinutes = (time: number): string => {
+  const minutes = Math.floor(getMinutesInMilliseconds(time) / 1000);
+  return withLeadingZero(minutes);
+};
+
+export const getDisplaySeconds = (time: number): string => {
+  time = Math.max(time, 0);
+  const seconds = Math.floor((time % 60000) / 1000);
+
+  return withLeadingZero(seconds);
+};
+
+export const getDisplayTime = (time: number): string => {
+  const minutes = getDisplayMinutes(time);
+  const seconds = getDisplaySeconds(time);
+
+  return `${minutes}:${seconds}`;
+};

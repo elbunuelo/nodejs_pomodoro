@@ -1,73 +1,26 @@
 import { initEvents } from "./events";
+import { playWorkSound, playBreakSound, playLongBreakSound } from "./sound";
 import { renderBar, renderMode, renderPomodoros, renderTimer } from "./render"; // let DEFAULT_POMODORO_LENGTH: number = 60 * 25 * 1000;
-import { playBreakSound, playLongBreakSound, playWorkSound } from "./sound";
+import { startPomodoro, startBreak, startLongBreak } from "./pomodoro";
 import type { State } from "./types";
 import {
   DEFAULT_TOTAL_POMODOROS,
   getCurrentIntervalLength,
+  getDisplayTime,
   INTERVAL_LENGTH,
   MODE,
 } from "./utils";
-
-export const withLeadingZero = (num: number) => {
-  num = Math.max(num, 0);
-  const leadingZero = num < 10 ? "0" : "";
-  return `${leadingZero}${num}`;
-};
-
-const getMinutesInMilliseconds = (time: number) => {
-  time = Math.max(time, 0);
-  return Math.floor(time / 60);
-};
-
-export const getDisplayMinutes = (time: number): string => {
-  const minutes = Math.floor(getMinutesInMilliseconds(time) / 1000);
-  return withLeadingZero(minutes);
-};
-
-export const getDisplaySeconds = (time: number): string => {
-  time = Math.max(time, 0);
-  const seconds = Math.floor((time % 60000) / 1000);
-
-  return withLeadingZero(seconds);
-};
-
-export const getDisplayTime = (time: number): string => {
-  const minutes = getDisplayMinutes(time);
-  const seconds = getDisplaySeconds(time);
-
-  return `${minutes}:${seconds}`;
-};
+import { Escape, moveCursor } from "./escape_codes";
 
 const render = (state: State) => {
-  // console.clear();
-
-  process.stdout.write("\u001B[?25l");
+  process.stdout.write(Escape.HIDE_CURSOR);
   renderTimer(getDisplayTime(state.time));
   renderBar(state.time, state.mode);
   renderPomodoros(state.totalPomodoros, state.completedPomodoros);
   renderMode(state.mode);
 };
 
-const startPomodoro = (state: State) => {
-  state.mode = MODE.pomodoro;
-  state.time = getCurrentIntervalLength(state.mode);
-  playWorkSound();
-};
-
-const startBreak = (state: State) => {
-  state.mode = MODE.break;
-  state.time = getCurrentIntervalLength(state.mode);
-  playBreakSound();
-};
-
-const startLongBreak = (state: State) => {
-  state.mode = MODE.long_break;
-  state.time = getCurrentIntervalLength(state.mode);
-  playLongBreakSound();
-};
-
-const startInterval = (state: State) => {
+export const startInterval = (state: State) => {
   state.interval = setInterval(() => {
     if (state.time <= 0) {
       if (state.mode === "pomodoro") {
@@ -78,12 +31,12 @@ const startInterval = (state: State) => {
         ) {
           clearInterval(state.interval);
         } else if (state.completedPomodoros % 3 === 0) {
-          startLongBreak(state);
+          startLongBreak(state, playLongBreakSound);
         } else {
-          startBreak(state);
+          startBreak(state, playBreakSound);
         }
       } else {
-        startPomodoro(state);
+        startPomodoro(state, playWorkSound);
       }
       return;
     }
@@ -122,34 +75,34 @@ const api = {
   },
   skip(state: State) {
     if (["break", "long_break"].includes(state.mode)) {
-      startPomodoro(state);
+      startPomodoro(state, playWorkSound);
     } else {
-      startBreak(state);
+      startBreak(state, playBreakSound);
     }
   },
   restart(state: State) {
     switch (state.mode) {
       case "break":
-        startBreak(state);
+        startBreak(state, playBreakSound);
         break;
       case "long_break":
-        startLongBreak(state);
+        startLongBreak(state, playLongBreakSound);
         break;
       case "pomodoro":
-        startPomodoro(state);
+        startPomodoro(state, playWorkSound);
         break;
     }
   },
   break(state: State) {
-    startBreak(state);
+    startBreak(state, playBreakSound);
   },
   longBreak(state: State) {
-    startLongBreak(state);
+    startLongBreak(state, playLongBreakSound);
   },
   pomodoro(state: State) {
-    startPomodoro(state);
+    startPomodoro(state, playWorkSound);
   },
 };
 initEvents({ api, state, stream: process.stdin });
 
-process.stdout.write("\u001B[2J\u001B[0;0H");
+process.stdout.write(`${Escape.SHOW_CURSOR}${moveCursor(0, 0)}`);
