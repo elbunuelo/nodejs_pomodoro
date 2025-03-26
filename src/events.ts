@@ -1,57 +1,48 @@
 import readline from "readline";
-import type { ReadStream } from "tty";
+import type { EventsOptions } from "./types";
 
-export interface Api {
-  break: () => void;
-  complete: () => void;
-  exit: () => void;
-  longBreak: () => void;
-  pausePlay: () => void;
-  pomodoro: () => void;
-  restart: () => void;
-  skip: () => void;
-}
+export const initEvents = ({ api, stream, state }: EventsOptions) => {
+  if (readline) {
+    // Configure readline
+    readline.emitKeypressEvents(stream);
+    if (stream.isTTY) {
+      stream.setRawMode(true);
+    }
 
-export const initEvents = (api: Api, stream: ReadStream) => {
-  // Configure readline
-  readline.emitKeypressEvents(stream);
-  if (stream.isTTY) {
-    stream.setRawMode(true);
+    // Create interface
+    readline.createInterface({
+      input: stream,
+      // output: process.stdout,
+    });
   }
-
-  // Create interface
-  readline.createInterface({
-    input: stream,
-    // output: process.stdout,
-  });
 
   // Listen for keypress events
   stream.on("keypress", (str, key) => {
     if (key && key.ctrl && key.name === "c") {
-      api.exit();
+      api.exit(state);
     }
 
     switch (key.name) {
       case "space":
-        api.pausePlay();
+        api.pausePlay(state);
         break;
       case "s":
-        api.skip();
+        api.skip(state);
         break;
       case "r":
-        api.restart();
+        api.restart(state);
         break;
       case "b":
-        api.break();
+        api.break(state);
         break;
       case "l":
-        api.longBreak();
+        api.longBreak(state);
         break;
       case "p":
-        api.pomodoro();
+        api.pomodoro(state);
         break;
       case "c":
-        api.complete();
+        api.complete(state);
         break;
     }
   });

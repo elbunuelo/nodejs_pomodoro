@@ -1,6 +1,7 @@
 import { initEvents } from "./events";
 import { renderBar, renderMode, renderPomodoros, renderTimer } from "./render"; // let DEFAULT_POMODORO_LENGTH: number = 60 * 25 * 1000;
 import { playBreakSound, playLongBreakSound, playWorkSound } from "./sound";
+import type { State } from "./types";
 import {
   DEFAULT_TOTAL_POMODOROS,
   getCurrentIntervalLength,
@@ -91,14 +92,6 @@ const startInterval = (state: State) => {
   }, INTERVAL_LENGTH);
 };
 
-interface State {
-  interval?: NodeJS.Timeout;
-  mode: string;
-  time: number;
-  totalPomodoros: number;
-  completedPomodoros: number;
-}
-
 const state: State = {
   interval: undefined,
   mode: MODE.pomodoro,
@@ -110,8 +103,15 @@ const state: State = {
 startInterval(state);
 render(state);
 
-initEvents({
-  pausePlay() {
+const api = {
+  exit(state: State) {
+    console.clear();
+    process.exit(0);
+  },
+  complete(state: State) {
+    state.time = 0;
+  },
+  pausePlay(state: State) {
     if (state.interval) {
       clearInterval(state.interval);
       state.interval = undefined;
@@ -120,14 +120,14 @@ initEvents({
     }
     render(state);
   },
-  skip() {
+  skip(state: State) {
     if (["break", "long_break"].includes(state.mode)) {
       startPomodoro(state);
     } else {
       startBreak(state);
     }
   },
-  restart() {
+  restart(state: State) {
     switch (state.mode) {
       case "break":
         startBreak(state);
@@ -140,15 +140,16 @@ initEvents({
         break;
     }
   },
-  break() {
+  break(state: State) {
     startBreak(state);
   },
-  longBreak() {
+  longBreak(state: State) {
     startLongBreak(state);
   },
-  pomodoro() {
+  pomodoro(state: State) {
     startPomodoro(state);
   },
-});
+};
+initEvents({ api, state, stream: process.stdin });
 
 process.stdout.write("\u001B[2J\u001B[0;0H");
