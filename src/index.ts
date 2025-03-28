@@ -13,11 +13,13 @@ import {
 import { Escape, moveCursor } from "./escape_codes";
 
 const render = (state: State) => {
+  process.stdout.cork();
   process.stdout.write(Escape.HIDE_CURSOR);
   renderTimer(getDisplayTime(state.time));
   renderBar(state.time, state.mode);
   renderPomodoros(state.totalPomodoros, state.completedPomodoros);
   renderMode(state.mode);
+  process.stdout.uncork();
 };
 
 export const startInterval = (state: State) => {
